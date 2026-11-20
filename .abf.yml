@@ -1,2 +1,4 @@
 sources:
+  kotlinx-serialization-json-1.13.0.tar.gz: 4d66ac4d7ec3376ee36e0867c3d7d8f1c57866b7
+removed_sources:
   kotlinx-serialization-json-1.11.0.tar.gz: ebd4844e2fa105bc5d561bc8a3f676379868828e

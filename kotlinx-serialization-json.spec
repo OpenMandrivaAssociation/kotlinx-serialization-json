@@ -1,11 +1,11 @@
 Name:		kotlinx-serialization-json
-Version:	1.11.0
+Version:	1.13.0
 Release:	1
 Summary:	Kotlin JSON serialization for the JVM
 Group:		Development/Java
 License:	Apache-2.0
 URL:		https://github.com/Kotlin/kotlinx.serialization
-# kotlinx.serialization tag v1.11.0 (6956af2e6073347c7832c3c5b374fa3b5a345956).
+# kotlinx.serialization tag v1.13.0.
 # JVM classes for the catalog coordinate kotlinx-serialization-json.
 # Upstream publishes that artifactId as a pom that points at the -jvm jar.
 Source0:	kotlinx-serialization-json-%{version}.tar.gz
@@ -20,10 +20,13 @@ BuildRequires:	mvn(org.jetbrains.kotlin:kotlin-time-instant)
 BuildRequires:	mvn(org.jetbrains.kotlinx:kotlinx-serialization-core)
 BuildRequires:	mvn(org.jetbrains:annotations)
 
+# Local rpmbuild can pass --define "serialization_core_jar /path/to/new/core.jar"
+%{!?serialization_core_jar:%global serialization_core_jar %{_javadir}/kotlinx-serialization-core.jar}
+
 %description
 org.jetbrains.kotlinx:kotlinx-serialization-json %{version}.
-JVM JSON format from tag v1.11.0, compiled with kotlinc 2.0.21
-against kotlinx-serialization-core 1.11.0.
+JVM JSON format from tag v1.13.0, compiled with kotlinc 2.0.21
+against kotlinx-serialization-core 1.13.0.
 FormatLanguage is a typealias to org.intellij.lang.annotations.Language.
 IgnorableReturnValue annotations are omitted. They only affect the
 return-value checker. Reserved discard bindings stay as bare calls.
@@ -47,7 +50,7 @@ for p in files:
     text = text.replace("@IgnorableReturnValue\n", "")
     text = text.replace("val _ = ", "")
     p.write_text(text)
-if len(files) != 45 or ign != 21 or disc != 7:
+if len(files) != 46 or ign != 21 or disc != 7:
     raise SystemExit("patch counts files=" + str(len(files)) + " ign=" + str(ign) + " disc=" + str(disc))
 for p in files:
     text = p.read_text()
@@ -61,7 +64,7 @@ export JAVA_HOME=%{_jvmdir}/java-21-openjdk
 export PATH="$JAVA_HOME/bin:/usr/bin:/bin"
 STDLIB=%{_javadir}/kotlin-stdlib.jar
 INSTANT=%{_javadir}/kotlin-time-instant.jar
-CORE=%{_javadir}/kotlinx-serialization-core.jar
+CORE=%{serialization_core_jar}
 ANN=%{_javadir}/org.jetbrains.annotations.jar
 test -s "$STDLIB"
 test -s "$INSTANT"
@@ -70,8 +73,8 @@ test -s "$ANN"
 mkdir -p classes
 find src -name '*.kt' | sort > sources.list
 find src/common -name '*.kt' | sort > common.list
-test "$(wc -l < sources.list)" -eq 45
-test "$(wc -l < common.list)" -eq 37
+test "$(wc -l < sources.list)" -eq 46
+test "$(wc -l < common.list)" -eq 38
 common=$(paste -sd, common.list)
 kotlinc -J-Xmx2g -jvm-target 1.8 -language-version 2.0 -no-stdlib \
 	-Xmulti-platform -Xexpect-actual-classes \
@@ -82,11 +85,12 @@ kotlinc -J-Xmx2g -jvm-target 1.8 -language-version 2.0 -no-stdlib \
 	-opt-in=kotlinx.serialization.SealedSerializationApi \
 	-opt-in=kotlin.ExperimentalSubclassOptIn \
 	-opt-in=kotlin.time.ExperimentalTime \
+	-opt-in=kotlin.uuid.ExperimentalUuidApi \
 	-opt-in=kotlin.ExperimentalMultiplatform \
 	-opt-in=kotlinx.serialization.internal.CoreFriendModuleApi \
 	-opt-in=kotlinx.serialization.json.internal.JsonFriendModuleApi \
 	-cp "$STDLIB:$INSTANT:$CORE:$ANN" -d classes @sources.list
-test "$(find classes -name '*.class' | wc -l)" -eq 130
+test "$(find classes -name '*.class' | wc -l)" -eq 132
 test -s classes/kotlinx/serialization/json/Json.class
 printf '%s\n' 'Manifest-Version: 1.0' 'Automatic-Module-Name: kotlinx.serialization.json' > manifest.mf
 jar cfm kotlinx-serialization-json.jar manifest.mf -C classes .
@@ -117,7 +121,7 @@ cat > kotlinx-serialization-json.pom << END
     <dependency>
       <groupId>org.jetbrains.kotlinx</groupId>
       <artifactId>kotlinx-serialization-core</artifactId>
-      <version>%{version}</version>
+      <version>1.13.0</version>
     </dependency>
     <dependency>
       <groupId>org.jetbrains</groupId>
@@ -147,7 +151,7 @@ export PATH="$JAVA_HOME/bin:/usr/bin:/bin"
 JAR=%{buildroot}%{_javadir}/kotlinx-serialization-json.jar
 STDLIB=%{_javadir}/kotlin-stdlib.jar
 INSTANT=%{_javadir}/kotlin-time-instant.jar
-CORE=%{_javadir}/kotlinx-serialization-core.jar
+CORE=%{serialization_core_jar}
 ANN=%{_javadir}/org.jetbrains.annotations.jar
 test -s "$JAR"
 mkdir -p check
